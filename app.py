@@ -158,7 +158,7 @@ with tab1:
         st.caption("Rendimiento: 0.18 L / m²")
         opcion_proteccion = st.radio(
             "Seleccioná el acabado deseado:",
-            ["Ninguno", "Consolidante Sellador Acrílico", "Hidrolaca"],
+            ["Ninguno", "Consolidante Sellador", "Hidrolaca"],
             horizontal=True
         )
         
