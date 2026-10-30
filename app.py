@@ -169,7 +169,7 @@ with tab1:
             with col_prot2:
                 desc_prot = st.number_input("% Desc.", 0, 100, 0, key="desc_prot")
                 
-            if opcion_proteccion == "Consolidante Sellador Acrílico":
+            if opcion_proteccion == "Consolidante Sellador":
                 precio_sellador_20 = buscar_precio(["Consolidante", "20"])
                 precio_sellador_5 = buscar_precio(["Consolidante", "5"])
                 with col_prot1:
@@ -257,7 +257,7 @@ with tab3:
         precio_sellador_5_final = aplicar_desc(precio_sellador_5, desc_prot)
         precio_hidrolaca_final = aplicar_desc(precio_hidrolaca, desc_prot)
         
-        if opcion_proteccion == "Consolidante Sellador Acrílico":
+        if opcion_proteccion == "Consolidante Sellador":
             costo_proteccion = (baldes_sellador_20 * precio_sellador_20_final) + (bidones_sellador_5 * precio_sellador_5_final)
         elif opcion_proteccion == "Hidrolaca":
             costo_proteccion = bidones_hidro * precio_hidrolaca_final
@@ -292,11 +292,11 @@ with tab3:
                 st.write(f"- **Puente Adherente (Polvo 25kg):** {kits_puente} un. x {formato_moneda(precio_pte_polvo_final, True)}{txt_desc(desc_pte)} = {formato_moneda(kits_puente * precio_pte_polvo_final, True)}")
                 st.write(f"- **Puente Adherente (Líquido 15kg):** {kits_puente} un. x {formato_moneda(precio_pte_liq_final, True)}{txt_desc(desc_pte)} = {formato_moneda(kits_puente * precio_pte_liq_final, True)}")
             
-            if opcion_proteccion == "Consolidante Sellador Acrílico":
+            if opcion_proteccion == "Consolidante Sellador":
                 if baldes_sellador_20 > 0:
-                    st.write(f"- **Sellador Acrílico (20L):** {baldes_sellador_20} un. x {formato_moneda(precio_sellador_20_final, True)}{txt_desc(desc_prot)} = {formato_moneda(baldes_sellador_20 * precio_sellador_20_final, True)}")
+                    st.write(f"- **Consolidante Sellador (20L):** {baldes_sellador_20} un. x {formato_moneda(precio_sellador_20_final, True)}{txt_desc(desc_prot)} = {formato_moneda(baldes_sellador_20 * precio_sellador_20_final, True)}")
                 if bidones_sellador_5 > 0:
-                    st.write(f"- **Sellador Acrílico (5L):** {bidones_sellador_5} un. x {formato_moneda(precio_sellador_5_final, True)}{txt_desc(desc_prot)} = {formato_moneda(bidones_sellador_5 * precio_sellador_5_final, True)}")
+                    st.write(f"- **Consolidante Sellador (5L):** {bidones_sellador_5} un. x {formato_moneda(precio_sellador_5_final, True)}{txt_desc(desc_prot)} = {formato_moneda(bidones_sellador_5 * precio_sellador_5_final, True)}")
             elif opcion_proteccion == "Hidrolaca":
                 if bidones_hidro > 0:
                     st.write(f"- **Hidrolaca (5L):** {bidones_hidro} un. x {formato_moneda(precio_hidrolaca_final, True)}{txt_desc(desc_prot)} = {formato_moneda(bidones_hidro * precio_hidrolaca_final, True)}")
