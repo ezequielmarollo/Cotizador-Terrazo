@@ -85,10 +85,13 @@ def calcular_materiales(m2, espesor):
     
     baldes_ret_20, bidones_ret_5 = optimizar_envases(m2 * 0.2)
     kits_puente = math.ceil(m2 * 1.0 / 40)
-    baldes_sellador_20, bidones_sellador_5 = optimizar_envases(m2 * 0.18)
+    
+    # Consolidante Sellador ahora es exclusivamente de 20L
+    baldes_sellador_20 = math.ceil((m2 * 0.18) / 20)
+    
     bidones_hidro = math.ceil((m2 * 0.18) / 5)
     
-    return kits, bolsas_base, baldes_ret_20, bidones_ret_5, kits_puente, baldes_sellador_20, bidones_sellador_5, bidones_hidro
+    return kits, bolsas_base, baldes_ret_20, bidones_ret_5, kits_puente, baldes_sellador_20, bidones_hidro
 
 # --- INTERFAZ PRINCIPAL ---
 st.title("Cotizador de Terrazo")
@@ -162,7 +165,7 @@ with tab1:
             horizontal=True
         )
         
-        precio_sellador_20, precio_sellador_5, precio_hidrolaca, desc_prot = 0.0, 0.0, 0.0, 0
+        precio_sellador_20, precio_hidrolaca, desc_prot = 0.0, 0.0, 0
         
         if opcion_proteccion != "Ninguno":
             col_prot1, col_prot2 = st.columns([3, 1])
@@ -171,9 +174,8 @@ with tab1:
                 
             if opcion_proteccion == "Consolidante Sellador":
                 precio_sellador_20 = buscar_precio(["Consolidante", "20"])
-                precio_sellador_5 = buscar_precio(["Consolidante", "5"])
                 with col_prot1:
-                    st.write(f"🏷️ *Lista: 20L ({formato_moneda(precio_sellador_20, True)}) | 5L ({formato_moneda(precio_sellador_5, True)})*")
+                    st.write(f"🏷️ *Lista: 20L ({formato_moneda(precio_sellador_20, True)})*")
             elif opcion_proteccion == "Hidrolaca":
                 precio_hidrolaca = buscar_precio(["Hidrolaca", "5"])
                 with col_prot1:
@@ -233,7 +235,7 @@ with tab2:
 with tab3:
     if st.button("Generar Cotización 📄", type="primary", use_container_width=True):
         
-        kits_necesarios, bolsas_base, baldes_ret_20, bidones_ret_5, kits_puente, baldes_sellador_20, bidones_sellador_5, bidones_hidro = calcular_materiales(m2, espesor)
+        kits_necesarios, bolsas_base, baldes_ret_20, bidones_ret_5, kits_puente, baldes_sellador_20, bidones_hidro = calcular_materiales(m2, espesor)
         distribucion = [b * kits_necesarios for b in bolsas_por_kit]
 
         # Cálculos de Costos con Descuentos
@@ -254,11 +256,10 @@ with tab3:
         
         costo_proteccion = 0
         precio_sellador_20_final = aplicar_desc(precio_sellador_20, desc_prot)
-        precio_sellador_5_final = aplicar_desc(precio_sellador_5, desc_prot)
         precio_hidrolaca_final = aplicar_desc(precio_hidrolaca, desc_prot)
         
         if opcion_proteccion == "Consolidante Sellador":
-            costo_proteccion = (baldes_sellador_20 * precio_sellador_20_final) + (bidones_sellador_5 * precio_sellador_5_final)
+            costo_proteccion = baldes_sellador_20 * precio_sellador_20_final
         elif opcion_proteccion == "Hidrolaca":
             costo_proteccion = bidones_hidro * precio_hidrolaca_final
         
@@ -295,8 +296,6 @@ with tab3:
             if opcion_proteccion == "Consolidante Sellador":
                 if baldes_sellador_20 > 0:
                     st.write(f"- **Consolidante Sellador (20L):** {baldes_sellador_20} un. x {formato_moneda(precio_sellador_20_final, True)}{txt_desc(desc_prot)} = {formato_moneda(baldes_sellador_20 * precio_sellador_20_final, True)}")
-                if bidones_sellador_5 > 0:
-                    st.write(f"- **Consolidante Sellador (5L):** {bidones_sellador_5} un. x {formato_moneda(precio_sellador_5_final, True)}{txt_desc(desc_prot)} = {formato_moneda(bidones_sellador_5 * precio_sellador_5_final, True)}")
             elif opcion_proteccion == "Hidrolaca":
                 if bidones_hidro > 0:
                     st.write(f"- **Hidrolaca (5L):** {bidones_hidro} un. x {formato_moneda(precio_hidrolaca_final, True)}{txt_desc(desc_prot)} = {formato_moneda(bidones_hidro * precio_hidrolaca_final, True)}")
