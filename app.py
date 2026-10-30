@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import math
 import os
+from fpdf import FPDF
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Cotizador Terrazo", page_icon="🏗️", layout="wide")
@@ -42,6 +43,62 @@ def aplicar_desc(precio, descuento_pct):
 
 def txt_desc(descuento_pct):
     return f" (-{descuento_pct}%)" if descuento_pct > 0 else ""
+
+# --- CLASE PDF ESQUEMÁTICO ---
+class PDF(FPDF):
+    def header(self):
+        # Azul Premecol
+        self.set_fill_color(15, 60, 130)
+        self.rect(0, 0, 210, 25, 'F')
+        self.set_text_color(255, 255, 255)
+        self.set_font('Arial', 'B', 20)
+        self.cell(0, 10, 'PREMECOL', 0, 1, 'C')
+        self.set_font('Arial', 'B', 12)
+        self.cell(0, 8, 'PRESUPUESTO DE TERRAZO', 0, 1, 'C')
+        self.ln(10)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.set_text_color(128, 128, 128)
+        self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
+
+    def chapter_title(self, title, color=(50, 50, 50)):
+        self.set_font('Arial', 'B', 14)
+        self.set_text_color(*color)
+        self.cell(0, 8, title, 0, 1, 'L')
+        self.set_fill_color(*color)
+        self.rect(self.get_x(), self.get_y(), 190, 0.5, 'F')
+        self.ln(3)
+
+    def item_row(self, item, qty, unit_price, discount, price_with_desc, total):
+        self.set_font('Arial', '', 9)
+        self.set_text_color(0, 0, 0)
+        
+        # Anchos rediseñados: Total = 190
+        self.cell(65, 7, item[:45], 0, 0, 'L')
+        self.cell(15, 7, str(qty), 0, 0, 'C')
+        self.cell(25, 7, f"${unit_price:,.0f}".replace(",", "."), 0, 0, 'R')
+        
+        if discount > 0:
+            self.set_text_color(15, 60, 130)
+            self.cell(15, 7, f"-{discount}%", 0, 0, 'C')
+            self.set_text_color(0, 0, 0)
+        else:
+            self.cell(15, 7, "-", 0, 0, 'C')
+            
+        self.cell(35, 7, f"${price_with_desc:,.0f}".replace(",", "."), 0, 0, 'R')
+        self.cell(35, 7, f"${total:,.0f}".replace(",", "."), 0, 1, 'R')
+
+    def header_row(self):
+        self.set_font('Arial', 'B', 9)
+        self.set_fill_color(240, 240, 240)
+        self.cell(65, 7, 'Descripción', 1, 0, 'C', 1)
+        self.cell(15, 7, 'Cant.', 1, 0, 'C', 1)
+        self.cell(25, 7, 'Prec. Unit.', 1, 0, 'C', 1)
+        self.cell(15, 7, 'Desc.', 1, 0, 'C', 1)
+        self.cell(35, 7, 'Prec. c/Desc.', 1, 0, 'C', 1)
+        self.cell(35, 7, 'Subtotal', 1, 1, 'C', 1)
 
 # --- NUEVA FUNCIÓN OPTIMIZADORA DE ENVASES ---
 def optimizar_envases(litros_necesarios):
@@ -86,9 +143,7 @@ def calcular_materiales(m2, espesor):
     baldes_ret_20, bidones_ret_5 = optimizar_envases(m2 * 0.2)
     kits_puente = math.ceil(m2 * 1.0 / 40)
     
-    # Consolidante Sellador ahora es exclusivamente de 20L
     baldes_sellador_20 = math.ceil((m2 * 0.18) / 20)
-    
     bidones_hidro = math.ceil((m2 * 0.18) / 5)
     
     return kits, bolsas_base, baldes_ret_20, bidones_ret_5, kits_puente, baldes_sellador_20, bidones_hidro
@@ -181,7 +236,6 @@ with tab1:
                 with col_prot1:
                     st.write(f"🏷️ *Lista: 5L ({formato_moneda(precio_hidrolaca, True)})*")
 
-
 # --- PESTAÑA 2: ÁRIDOS ---
 with tab2:
     st.subheader("Composición de Áridos")
@@ -230,7 +284,6 @@ with tab2:
         bolsas_por_kit = [1, 1, 1]
         st.success("✅ 1 bolsa de cada color por kit.")
 
-
 # --- PESTAÑA 3: RESULTADOS ---
 with tab3:
     if st.button("Generar Cotización 📄", type="primary", use_container_width=True):
@@ -238,7 +291,6 @@ with tab3:
         kits_necesarios, bolsas_base, baldes_ret_20, bidones_ret_5, kits_puente, baldes_sellador_20, bidones_hidro = calcular_materiales(m2, espesor)
         distribucion = [b * kits_necesarios for b in bolsas_por_kit]
 
-        # Cálculos de Costos con Descuentos
         precio_base_final = aplicar_desc(precio_base, desc_base)
         costo_base = bolsas_base * precio_base_final
         
@@ -265,7 +317,7 @@ with tab3:
         
         costo_total = costo_base + costo_aridos_total + costo_retardante + costo_puente + costo_proteccion
 
-        # Interfaz de Resultados
+        # Pantalla Web
         st.subheader("Resumen de Pedido")
         col1, col2 = st.columns(2)
         col1.metric("Kits de Venta (Mezcla Principal)", f"{kits_necesarios} Kits")
@@ -273,7 +325,6 @@ with tab3:
 
         with st.container(border=True):
             st.markdown("### Detalle para Carga y Facturación")
-            
             st.write("**Base Cementicia (40%):**")
             st.write(f"- **{bolsas_base}** bolsas de Base {color_base} x {formato_moneda(precio_base_final, True)}{txt_desc(desc_base)} = {formato_moneda(costo_base, True)}")
             
@@ -300,4 +351,72 @@ with tab3:
                 if bidones_hidro > 0:
                     st.write(f"- **Hidrolaca (5L):** {bidones_hidro} un. x {formato_moneda(precio_hidrolaca_final, True)}{txt_desc(desc_prot)} = {formato_moneda(bidones_hidro * precio_hidrolaca_final, True)}")
             
-        st.markdown("<h3 style='text-align: center; color: #d9381e; font-weight: bold;'>PREMECOL</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: #0f3c82; font-weight: bold;'>PREMECOL</h3>", unsafe_allow_html=True)
+
+        # --- GENERACIÓN DE PDF ---
+        pdf = PDF()
+        pdf.add_page()
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.set_text_color(80, 80, 80)
+        pdf.cell(0, 6, f'Superficie a cubrir: {m2} m2 | Espesor: {espesor} cm', 0, 1)
+        pdf.cell(0, 6, f'Kits de mezcla principal calculados: {kits_necesarios}', 0, 1)
+        pdf.ln(5)
+        
+        # 1. Mezcla
+        pdf.chapter_title('1. MEZCLA PRINCIPAL (Base + Áridos)', color=(41, 128, 185))
+        pdf.header_row()
+        
+        pdf.item_row(f'Base {color_base} (25kg)', f'{bolsas_base} bls', precio_base, desc_base, precio_base_final, costo_base)
+        for nombre, cant, precio, desc in zip(aridos_seleccionados, distribucion, precios_aridos, descuentos_aridos):
+            if cant > 0:
+                precio_final = aplicar_desc(precio, desc)
+                pdf.item_row(f'Árido {nombre} (25kg)', f'{cant} bls', precio, desc, precio_final, cant * precio_final)
+                
+        pdf.set_fill_color(245, 250, 255)
+        pdf.cell(155, 8, 'Subtotal Mezcla', 'T', 0, 'R', 1)
+        pdf.set_font('Arial', 'B', 10)
+        pdf.cell(35, 8, f'${(costo_base + costo_aridos_total):,.0f}'.replace(",", "."), 'T', 1, 'R', 1)
+        pdf.ln(5)
+        
+        # 2. Aditivos
+        pdf.chapter_title('2. ADITIVOS Y COMPLEMENTOS', color=(39, 174, 96))
+        pdf.header_row()
+        
+        if baldes_ret_20 > 0:
+            pdf.item_row('Retardante Superficial (20L)', f'{baldes_ret_20} un', precio_ret_20, desc_ret, precio_ret_20_final, baldes_ret_20 * precio_ret_20_final)
+        if bidones_ret_5 > 0:
+            pdf.item_row('Retardante Superficial (5L)', f'{bidones_ret_5} un', precio_ret_5, desc_ret, precio_ret_5_final, bidones_ret_5 * precio_ret_5_final)
+            
+        if usa_puente:
+            pdf.item_row('Puente Adh. - Polvo (25kg)', f'{kits_puente} un', precio_puente_polvo, desc_pte, precio_pte_polvo_final, kits_puente * precio_pte_polvo_final)
+            pdf.item_row('Puente Adh. - Líquido (15kg)', f'{kits_puente} un', precio_puente_liquido, desc_pte, precio_pte_liq_final, kits_puente * precio_pte_liq_final)
+            
+        if opcion_proteccion == "Consolidante Sellador" and baldes_sellador_20 > 0:
+            pdf.item_row('Consolidante Sellador (20L)', f'{baldes_sellador_20} un', precio_sellador_20, desc_prot, precio_sellador_20_final, baldes_sellador_20 * precio_sellador_20_final)
+        elif opcion_proteccion == "Hidrolaca" and bidones_hidro > 0:
+            pdf.item_row('Hidrolaca (5L)', f'{bidones_hidro} un', precio_hidrolaca, desc_prot, precio_hidrolaca_final, bidones_hidro * precio_hidrolaca_final)
+            
+        pdf.set_fill_color(245, 255, 245)
+        pdf.cell(155, 8, 'Subtotal Complementos', 'T', 0, 'R', 1)
+        pdf.set_font('Arial', 'B', 10)
+        pdf.cell(35, 8, f'${(costo_retardante + costo_puente + costo_proteccion):,.0f}'.replace(",", "."), 'T', 1, 'R', 1)
+        pdf.ln(10)
+        
+        # Total General
+        pdf.set_fill_color(15, 60, 130)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(130, 12, 'TOTAL GENERAL', 0, 0, 'R', 1)
+        pdf.cell(60, 12, f'ARS ${costo_total:,.0f}'.replace(",", "."), 0, 1, 'R', 1)
+        
+        pdf_bytes = pdf.output(dest='S').encode('latin-1', 'replace')
+        
+        st.markdown("---")
+        st.download_button(
+            label="⬇️ Descargar Presupuesto (PDF)",
+            data=pdf_bytes,
+            file_name="Presupuesto_Terrazo_Premecol.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
