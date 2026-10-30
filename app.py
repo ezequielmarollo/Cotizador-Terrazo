@@ -132,7 +132,7 @@ with tab1:
         
         col_ret1, col_ret2 = st.columns([3, 1])
         with col_ret1:
-            st.write(f"🏷️ *Lista: 20L ({formato_moneda(precio_ret_20)}) | 5L ({formato_moneda(precio_ret_5)})*")
+            st.write(f"🏷️ *Lista: 20L ({formato_moneda(precio_ret_20, True)}) | 5L ({formato_moneda(precio_ret_5, True)})*")
         with col_ret2:
             desc_ret = st.number_input("% Desc.", 0, 100, 0, key="desc_ret")
     
@@ -145,7 +145,7 @@ with tab1:
             
             col_pte1, col_pte2 = st.columns([3, 1])
             with col_pte1:
-                st.write(f"🏷️ *Lista: Polvo ({formato_moneda(precio_puente_polvo)}) | Líquido ({formato_moneda(precio_puente_liquido)})*")
+                st.write(f"🏷️ *Lista: Polvo ({formato_moneda(precio_puente_polvo, True)}) | Líquido ({formato_moneda(precio_puente_liquido, True)})*")
             with col_pte2:
                 desc_pte = st.number_input("% Desc.", 0, 100, 0, key="desc_pte")
         else:
@@ -173,11 +173,11 @@ with tab1:
                 precio_sellador_20 = buscar_precio(["Consolidante", "20"])
                 precio_sellador_5 = buscar_precio(["Consolidante", "5"])
                 with col_prot1:
-                    st.write(f"🏷️ *Lista: 20L ({formato_moneda(precio_sellador_20)}) | 5L ({formato_moneda(precio_sellador_5)})*")
+                    st.write(f"🏷️ *Lista: 20L ({formato_moneda(precio_sellador_20, True)}) | 5L ({formato_moneda(precio_sellador_5, True)})*")
             elif opcion_proteccion == "Hidrolaca":
                 precio_hidrolaca = buscar_precio(["Hidrolaca", "5"])
                 with col_prot1:
-                    st.write(f"🏷️ *Lista: 5L ({formato_moneda(precio_hidrolaca)})*")
+                    st.write(f"🏷️ *Lista: 5L ({formato_moneda(precio_hidrolaca, True)})*")
 
 
 # --- PESTAÑA 2: ÁRIDOS ---
